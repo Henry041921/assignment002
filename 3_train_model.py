@@ -137,6 +137,42 @@ def plot_confusion_matrix(y_true, y_pred, title):
     print(f"📊 {title} 已保存为图片")
 
 
+def plot_model_comparison(cv_scores, test_scores):
+    """
+    🌟 新增功能：绘制模型准确率对比双柱状图 (CV vs Test)
+    对比 5-Fold CV 分数 (训练阶段) 和 Test 分数 (最终评估)
+    """
+    # 构造 DataFrame 用于 seaborn 绘图
+    data = []
+    for model_name in cv_scores.keys():
+        data.append({'Model': model_name, 'Accuracy': cv_scores[model_name], 'Type': 'CV Score (Train)'})
+        data.append({'Model': model_name, 'Accuracy': test_scores[model_name], 'Type': 'Test Score'})
+
+    df_plot = pd.DataFrame(data)
+
+    plt.figure(figsize=(10, 6))
+
+    # hue='Type' 会自动生成双柱状图，palette="viridis" 设置配色
+    ax = sns.barplot(x='Model', y='Accuracy', hue='Type', data=df_plot, palette="viridis")
+
+    plt.title("Model Performance Comparison: CV vs Test", fontsize=15)
+    plt.ylabel("Accuracy", fontsize=12)
+    plt.ylim(0, 1.15)  # y轴范围稍微留大一点，放文字
+    plt.legend(loc='lower right')
+
+    # 在每个柱子上方标注具体数值 (百分比)
+    for p in ax.patches:
+        height = p.get_height()
+        # 排除无效高度（有时候 matplotlib 会产生高度为 nan 或 0 的隐藏 patch）
+        if not math.isnan(height) and height > 0:
+            ax.text(p.get_x() + p.get_width() / 2., height + 0.015,
+                    f'{height:.1%}', ha="center", va="bottom", fontsize=10, fontweight='bold')
+
+    plt.tight_layout()
+    plt.savefig("model_comparison_double.png")
+    print(f"📊 双柱状图对比已保存为: model_comparison_double.png")
+
+
 # ==========================================
 # 🚀 主程序
 # ==========================================
@@ -156,7 +192,9 @@ if __name__ == "__main__":
     print("Splitting data (80% Train, 20% Test)...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-    results = {}  # 存储最终结果
+    # 存储结果
+    cv_results = {}  # 存储最佳 CV 分数
+    test_results = {}  # 存储最终测试集分数
 
     print("\n" + "=" * 50)
     print("🤖 Part 2c: 监督学习优化与评估")
@@ -182,7 +220,9 @@ if __name__ == "__main__":
     final_dt = DecisionTreeClassifier(max_depth=best_dt_depth, random_state=42)
     final_dt.fit(X_train, y_train)
     dt_acc = accuracy_score(y_test, final_dt.predict(X_test))
-    results['Decision Tree'] = dt_acc
+
+    cv_results['Decision Tree'] = best_dt_score
+    test_results['Decision Tree'] = dt_acc
 
     # --- 模型 B: Random Forest (自选模型) ---
     print("\n🌳 2. Optimizing Random Forest (Selected Model)...")
@@ -203,7 +243,9 @@ if __name__ == "__main__":
     final_rf = RandomForestClassifier(n_estimators=best_rf_est, random_state=42)
     final_rf.fit(X_train, y_train)
     rf_acc = accuracy_score(y_test, final_rf.predict(X_test))
-    results['Random Forest'] = rf_acc
+
+    cv_results['Random Forest'] = best_rf_score
+    test_results['Random Forest'] = rf_acc
 
     # --- 模型 C: Custom KNN (From Scratch 必选) ---
     print("\n🤝 3. Optimizing Custom KNN (From Scratch)...")
@@ -224,7 +266,9 @@ if __name__ == "__main__":
     final_knn = KNN_From_Scratch(k=best_k)
     final_knn.fit(X_train, y_train)
     knn_acc = accuracy_score(y_test, final_knn.predict(X_test))
-    results['KNN (Custom)'] = knn_acc
+
+    cv_results['KNN (Custom)'] = best_knn_score
+    test_results['KNN (Custom)'] = knn_acc
 
     # --- 总结与保存 ---
     print("\n" + "=" * 50)
@@ -233,7 +277,7 @@ if __name__ == "__main__":
     best_model_name = ""
     best_model_acc = 0
 
-    for name, acc in results.items():
+    for name, acc in test_results.items():
         print(f"{name:<20}: {acc:.2%}")
         if acc > best_model_acc:
             best_model_acc = acc
@@ -242,8 +286,11 @@ if __name__ == "__main__":
     print("-" * 50)
     print(f"🌟 最佳模型是: {best_model_name}")
 
+    # 📊 绘制双柱状图对比 (Updated)
+    plot_model_comparison(cv_results, test_results)
+
     # 画出最佳模型的混淆矩阵
-    print("Generating Confusion Matrix for the best model...")
+    print("\nGenerating Confusion Matrix for the best model...")
     if best_model_name == 'Decision Tree':
         y_pred = final_dt.predict(X_test)
         save_model = final_dt
@@ -252,8 +299,6 @@ if __name__ == "__main__":
         save_model = final_rf
     else:
         y_pred = final_knn.predict(X_test)
-        # joblib 保存自定义类可能会有兼容性问题，通常推荐保存 RF
-        # 但如果 KNN 最好，我们还是尝试保存它
         save_model = final_knn
 
     plot_confusion_matrix(y_test, y_pred, f"Confusion Matrix - {best_model_name}")
