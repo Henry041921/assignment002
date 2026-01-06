@@ -1,27 +1,21 @@
 import pandas as pd
-import numpy as np  # 仅用于数据加载和分割，不用于KNN核心逻辑
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
 import math
 from collections import Counter
 
-# 允许使用 sklearn 进行数据分割、评估和其他模型 (例外是 KNN)
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# --- 配置 ---
 DATA_FILE = "landmarks_data.csv"
 MODEL_SAVE_PATH = "gesture_model.pkl"
 
-
-# ==========================================
-# 🌟 核心得分点：纯手写 KNN (From Scratch)
-# ⚠️ 严格遵守文档 Part 2c 要求：
-# "implemented from scratch using only Python standard built-in libraries"
-# ==========================================
+# Hand-coded KNN class without sklearn
+# Logic: Calculate distance -> Find neighbors -> Vote.
 class KNN_From_Scratch:
     def __init__(self, k=3):
         self.k = k
@@ -29,11 +23,8 @@ class KNN_From_Scratch:
         self.y_train = []
 
     def fit(self, X, y):
-        """
-        训练过程其实就是存储数据。
-        为了符合"仅使用内置库"的要求，我们将数据转换为纯 Python list。
-        """
-        # 如果输入是 DataFrame 或 Numpy 数组，转换为 list
+        # KNN is lazy learning, so we just store the data.
+        # Convert everything to Python lists to be safe and use standard libs only.
         if hasattr(X, 'values'):
             self.X_train = X.values.tolist()
         elif hasattr(X, 'tolist'):
@@ -49,15 +40,14 @@ class KNN_From_Scratch:
             self.y_train = list(y)
 
     def _euclidean_distance(self, row1, row2):
-        """仅使用 math 库计算欧几里得距离"""
+        # Calculate Euclidean distance manually using math library.
+        # It's just the square root of the sum of squared differences for each feature.
         distance = 0.0
         for i in range(len(row1)):
             distance += (row1[i] - row2[i]) ** 2
         return math.sqrt(distance)
 
     def predict(self, X):
-        """预测新数据"""
-        # 转换输入数据为 list
         if hasattr(X, 'values'):
             X_data = X.values.tolist()
         elif hasattr(X, 'tolist'):
@@ -72,25 +62,25 @@ class KNN_From_Scratch:
         return predictions
 
     def _predict_single(self, row):
-        # 1. 计算距离
+        # 1. Calculate distance from this point to all training points.
         distances = []
         for i in range(len(self.X_train)):
             dist = self._euclidean_distance(row, self.X_train[i])
             distances.append((self.X_train[i], self.y_train[i], dist))
 
-        # 2. 按距离排序 (从小到大)
+        # 2. Sort by distance to find the nearest ones.
         distances.sort(key=lambda tup: tup[2])
 
-        # 3. 获取最近的 k 个邻居
+        # 3. Get the top k nearest neighbors.
         neighbors = []
         for i in range(self.k):
-            neighbors.append(distances[i][1])  # 只取标签
+            neighbors.append(distances[i][1])
 
-        # 4. 投票 (使用 collections.Counter)
+        # 4. Voting: Use Counter to find the most common label among neighbors.
+        # This decides the final class.
         vote_result = Counter(neighbors).most_common(1)[0][0]
         return vote_result
 
-    # 为了兼容 sklearn 的接口 (cross_val_score 需要这个)
     def get_params(self, deep=True):
         return {"k": self.k}
 
@@ -99,16 +89,10 @@ class KNN_From_Scratch:
             setattr(self, parameter, value)
         return self
 
-
-# ==========================================
-# 🛠️ 辅助功能
-# ==========================================
 def run_cross_validation(model, X, y, k_folds=5):
-    """执行 5-Fold Cross Validation 并返回平均准确率"""
     kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
     scores = []
 
-    # 转换为 numpy 以方便索引切片
     X_np = np.array(X)
     y_np = np.array(y)
 
@@ -123,7 +107,6 @@ def run_cross_validation(model, X, y, k_folds=5):
 
     return np.mean(scores)
 
-
 def plot_confusion_matrix(y_true, y_pred, title):
     cm = confusion_matrix(y_true, y_pred)
     plt.figure(figsize=(8, 6))
@@ -134,15 +117,9 @@ def plot_confusion_matrix(y_true, y_pred, title):
     plt.ylabel('True Label')
     plt.tight_layout()
     plt.savefig(f"confusion_matrix_{title.replace(' ', '_')}.png")
-    print(f"📊 {title} 已保存为图片")
-
+    print(f"📊 {title} saved as image")
 
 def plot_model_comparison(cv_scores, test_scores):
-    """
-    🌟 新增功能：绘制模型准确率对比双柱状图 (CV vs Test)
-    对比 5-Fold CV 分数 (训练阶段) 和 Test 分数 (最终评估)
-    """
-    # 构造 DataFrame 用于 seaborn 绘图
     data = []
     for model_name in cv_scores.keys():
         data.append({'Model': model_name, 'Accuracy': cv_scores[model_name], 'Type': 'CV Score (Train)'})
@@ -152,60 +129,52 @@ def plot_model_comparison(cv_scores, test_scores):
 
     plt.figure(figsize=(10, 6))
 
-    # hue='Type' 会自动生成双柱状图，palette="viridis" 设置配色
     ax = sns.barplot(x='Model', y='Accuracy', hue='Type', data=df_plot, palette="viridis")
 
     plt.title("Model Performance Comparison: CV vs Test", fontsize=15)
     plt.ylabel("Accuracy", fontsize=12)
-    plt.ylim(0, 1.15)  # y轴范围稍微留大一点，放文字
+    plt.ylim(0, 1.15)
     plt.legend(loc='lower right')
 
-    # 在每个柱子上方标注具体数值 (百分比)
     for p in ax.patches:
         height = p.get_height()
-        # 排除无效高度（有时候 matplotlib 会产生高度为 nan 或 0 的隐藏 patch）
         if not math.isnan(height) and height > 0:
             ax.text(p.get_x() + p.get_width() / 2., height + 0.015,
                     f'{height:.1%}', ha="center", va="bottom", fontsize=10, fontweight='bold')
 
     plt.tight_layout()
     plt.savefig("model_comparison_double.png")
-    print(f"📊 双柱状图对比已保存为: model_comparison_double.png")
+    print(f"📊 Comparison plot saved as: model_comparison_double.png")
 
-
-# ==========================================
-# 🚀 主程序
-# ==========================================
 if __name__ == "__main__":
-    # 1. 加载数据
     print(f"Loading data from {DATA_FILE}...")
     try:
+        # Load the CSV data generated by MediaPipe.
+        # Note: MediaPipe already normalized the coordinates (0-1), which is crucial for KNN distance accuracy.
         df = pd.read_csv(DATA_FILE)
     except FileNotFoundError:
-        print("❌ 错误：找不到 CSV 文件。请先运行 2a_feature_extraction.py")
+        print("❌ Error: CSV file not found. Please run 2a_feature_extraction.py first.")
         exit()
 
     X = df.drop('label', axis=1)
     y = df['label']
 
-    # 2. 划分数据集 (80% 训练, 20% 测试) [cite: 168]
     print("Splitting data (80% Train, 20% Test)...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-    # 存储结果
-    cv_results = {}  # 存储最佳 CV 分数
-    test_results = {}  # 存储最终测试集分数
+    cv_results = {}
+    test_results = {}
 
     print("\n" + "=" * 50)
-    print("🤖 Part 2c: 监督学习优化与评估")
+    print("🤖 Part 2c: Supervised Learning Optimization & Evaluation")
     print("=" * 50)
 
-    # --- 模型 A: Decision Tree (必选) ---
+    # Model A: Decision Tree (Required)
     print("\n🌲 1. Optimizing Decision Tree...")
     best_dt_score = 0
     best_dt_depth = None
 
-    # 调参: Max Depth
+    # Parameter Tuning: Max Depth
     for depth in [3, 5, 10, 15, None]:
         dt = DecisionTreeClassifier(max_depth=depth, random_state=42)
         score = run_cross_validation(dt, X_train, y_train, k_folds=5)
@@ -216,7 +185,6 @@ if __name__ == "__main__":
 
     print(f"   ✅ Best Depth: {best_dt_depth}")
 
-    # 用最佳参数在完整训练集上重训，并在测试集上评估 [cite: 175-177]
     final_dt = DecisionTreeClassifier(max_depth=best_dt_depth, random_state=42)
     final_dt.fit(X_train, y_train)
     dt_acc = accuracy_score(y_test, final_dt.predict(X_test))
@@ -224,12 +192,12 @@ if __name__ == "__main__":
     cv_results['Decision Tree'] = best_dt_score
     test_results['Decision Tree'] = dt_acc
 
-    # --- 模型 B: Random Forest (自选模型) ---
+    # Model B: Random Forest
     print("\n🌳 2. Optimizing Random Forest (Selected Model)...")
     best_rf_score = 0
     best_rf_est = None
 
-    # 调参: n_estimators (树的数量)
+    # Parameter Tuning: n_estimators (number of trees)
     for n_est in [10, 50, 100]:
         rf = RandomForestClassifier(n_estimators=n_est, random_state=42)
         score = run_cross_validation(rf, X_train, y_train, k_folds=5)
@@ -247,12 +215,12 @@ if __name__ == "__main__":
     cv_results['Random Forest'] = best_rf_score
     test_results['Random Forest'] = rf_acc
 
-    # --- 模型 C: Custom KNN (From Scratch 必选) ---
+    # Model C: Custom KNN
     print("\n🤝 3. Optimizing Custom KNN (From Scratch)...")
     best_knn_score = 0
     best_k = None
 
-    # 调参: K Value
+    #Parameter Tuning: K Value
     for k in [1, 3, 5, 7]:
         knn = KNN_From_Scratch(k=k)
         score = run_cross_validation(knn, X_train, y_train, k_folds=5)
@@ -270,7 +238,6 @@ if __name__ == "__main__":
     cv_results['KNN (Custom)'] = best_knn_score
     test_results['KNN (Custom)'] = knn_acc
 
-    # --- 总结与保存 ---
     print("\n" + "=" * 50)
     print("🏆 Final Test Set Results")
     print("=" * 50)
@@ -284,12 +251,11 @@ if __name__ == "__main__":
             best_model_name = name
 
     print("-" * 50)
-    print(f"🌟 最佳模型是: {best_model_name}")
+    print(f"🌟 Best model is: {best_model_name}")
 
-    # 📊 绘制双柱状图对比 (Updated)
     plot_model_comparison(cv_results, test_results)
 
-    # 画出最佳模型的混淆矩阵
+    # Draw a double bar chart for comparison.
     print("\nGenerating Confusion Matrix for the best model...")
     if best_model_name == 'Decision Tree':
         y_pred = final_dt.predict(X_test)
@@ -303,7 +269,7 @@ if __name__ == "__main__":
 
     plot_confusion_matrix(y_test, y_pred, f"Confusion Matrix - {best_model_name}")
 
-    # 保存模型
+    # save model
     joblib.dump(save_model, MODEL_SAVE_PATH)
-    print(f"💾 模型已保存至: {MODEL_SAVE_PATH}")
-    print("\n下一步：请运行 4_realtime_recognition.py 查看实时效果！")
+    print(f"💾 Model saved to: {MODEL_SAVE_PATH}")
+    print("\nNext step: Run 4_realtime_recognition.py to see real-time usage!")
