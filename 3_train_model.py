@@ -117,7 +117,7 @@ def plot_confusion_matrix(y_true, y_pred, title):
     plt.ylabel('True Label')
     plt.tight_layout()
     plt.savefig(f"confusion_matrix_{title.replace(' ', '_')}.png")
-    print(f"📊 {title} saved as image")
+    print(f"{title} saved as image")
 
 def plot_model_comparison(cv_scores, test_scores):
     data = []
@@ -144,7 +144,7 @@ def plot_model_comparison(cv_scores, test_scores):
 
     plt.tight_layout()
     plt.savefig("model_comparison_double.png")
-    print(f"📊 Comparison plot saved as: model_comparison_double.png")
+    print(f"Comparison plot saved as: model_comparison_double.png")
 
 if __name__ == "__main__":
     print(f"Loading data from {DATA_FILE}...")
@@ -166,11 +166,11 @@ if __name__ == "__main__":
     test_results = {}
 
     print("\n" + "=" * 50)
-    print("🤖 Part 2c: Supervised Learning Optimization & Evaluation")
+    print("Part 2c: Supervised Learning Optimization & Evaluation")
     print("=" * 50)
 
     # Model A: Decision Tree (Required)
-    print("\n🌲 1. Optimizing Decision Tree...")
+    print("\n1. Optimizing Decision Tree...")
     best_dt_score = 0
     best_dt_depth = None
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
             best_dt_score = score
             best_dt_depth = depth
 
-    print(f"   ✅ Best Depth: {best_dt_depth}")
+    print(f"   Best Depth: {best_dt_depth}")
 
     final_dt = DecisionTreeClassifier(max_depth=best_dt_depth, random_state=42)
     final_dt.fit(X_train, y_train)
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     test_results['Decision Tree'] = dt_acc
 
     # Model B: Random Forest
-    print("\n🌳 2. Optimizing Random Forest (Selected Model)...")
+    print("\n2. Optimizing Random Forest (Selected Model)...")
     best_rf_score = 0
     best_rf_est = None
 
@@ -206,7 +206,7 @@ if __name__ == "__main__":
             best_rf_score = score
             best_rf_est = n_est
 
-    print(f"   ✅ Best Trees: {best_rf_est}")
+    print(f"   Best Trees: {best_rf_est}")
 
     final_rf = RandomForestClassifier(n_estimators=best_rf_est, random_state=42)
     final_rf.fit(X_train, y_train)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     test_results['Random Forest'] = rf_acc
 
     # Model C: Custom KNN
-    print("\n🤝 3. Optimizing Custom KNN (From Scratch)...")
+    print("\n3. Optimizing Custom KNN (From Scratch)...")
     best_knn_score = 0
     best_k = None
 
@@ -229,7 +229,7 @@ if __name__ == "__main__":
             best_knn_score = score
             best_k = k
 
-    print(f"   ✅ Best k: {best_k}")
+    print(f"   Best k: {best_k}")
 
     final_knn = KNN_From_Scratch(k=best_k)
     final_knn.fit(X_train, y_train)
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     test_results['KNN (Custom)'] = knn_acc
 
     print("\n" + "=" * 50)
-    print("🏆 Final Test Set Results")
+    print("Final Test Set Results")
     print("=" * 50)
     best_model_name = ""
     best_model_acc = 0
@@ -251,7 +251,7 @@ if __name__ == "__main__":
             best_model_name = name
 
     print("-" * 50)
-    print(f"🌟 Best model is: {best_model_name}")
+    print(f"Best model is: {best_model_name}")
 
     plot_model_comparison(cv_results, test_results)
 
@@ -271,5 +271,5 @@ if __name__ == "__main__":
 
     # save model
     joblib.dump(save_model, MODEL_SAVE_PATH)
-    print(f"💾 Model saved to: {MODEL_SAVE_PATH}")
+    print(f"Model saved to: {MODEL_SAVE_PATH}")
     print("\nNext step: Run 4_realtime_recognition.py to see real-time usage!")

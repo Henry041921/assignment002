@@ -154,7 +154,7 @@ def run_camera_mode():
     cap.release()
     cv2.destroyAllWindows()
     hands.close()
-    print("🎥 Camera mode ended")
+    print("Camera mode ended")
 
 
 def run_image_mode():
@@ -181,7 +181,7 @@ def run_image_mode():
         hands.close()
         return
 
-    print(f"🖼️ Analyzing: {file_path} ...")
+    print(f"Analyzing: {file_path} ...")
 
     frame = predict_and_draw(frame, hands)
 
@@ -213,26 +213,26 @@ def start_gui_app():
     title_font = font.Font(family="Helvetica", size=16, weight="bold")
     btn_font = font.Font(family="Helvetica", size=12)
 
-    lbl_title = tk.Label(root, text="🖐️ ASL Gesture Recognition", font=title_font, pady=20)
+    lbl_title = tk.Label(root, text="ASL Gesture Recognition", font=title_font, pady=20)
     lbl_title.pack()
 
     lbl_desc = tk.Label(root, text="Please select mode:", font=("Arial", 10), fg="gray")
     lbl_desc.pack(pady=5)
 
     # Button to start the camera mode.
-    btn_cam = tk.Button(root, text="📹 Start Camera (Real-time)",
+    btn_cam = tk.Button(root, text="Start Camera (Real-time)",
                         font=btn_font, bg="#e1f5fe", height=2, width=30,
                         command=run_camera_mode)
     btn_cam.pack(pady=10)
 
     # Button to upload an image file.
-    btn_img = tk.Button(root, text="🖼️ Upload Image (Select File)",
+    btn_img = tk.Button(root, text="Upload Image (Select File)",
                         font=btn_font, bg="#fce4ec", height=2, width=30,
                         command=run_image_mode)
     btn_img.pack(pady=10)
 
     # Button to exit the application.
-    btn_exit = tk.Button(root, text="❌ Exit Program",
+    btn_exit = tk.Button(root, text="Exit Program",
                          font=btn_font, height=1, width=30,
                          command=root.quit)
     btn_exit.pack(pady=20)

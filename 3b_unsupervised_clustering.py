@@ -19,14 +19,14 @@ def plot_cluster_comparison(y_true, y_cluster, title):
     plt.xlabel('Cluster ID (AI Found)')
     plt.tight_layout()
     plt.savefig(f"clustering_{title.replace(' ', '_')}.png")
-    print(f"📊 Plot saved: clustering_{title.replace(' ', '_')}.png")
+    print(f"Plot saved: clustering_{title.replace(' ', '_')}.png")
 
 if __name__ == "__main__":
     print("Loading data for Clustering...")
     try:
         df = pd.read_csv(DATA_FILE)
     except FileNotFoundError:
-        print("❌ CSV file not found")
+        print("CSV file not found")
         exit()
 
     # Separate features and labels for unsupervised learning
@@ -34,10 +34,10 @@ if __name__ == "__main__":
     y_true = df['label']
 
     n_clusters = 10
-    print(f"\n🤖 Starting Clustering (Target Clusters = {n_clusters})")
+    print(f"\nStarting Clustering (Target Clusters = {n_clusters})")
 
     # --- K-Means Clustering ---
-    print("\n🔹 Running K-Means...")
+    print("\nRunning K-Means...")
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     kmeans_labels = kmeans.fit_predict(X)
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     plot_cluster_comparison(y_true, kmeans_labels, "K-Means Clustering Analysis")
 
     # --- Hierarchical Clustering ---
-    print("\n🔹 Running Hierarchical Clustering...")
+    print("\nRunning Hierarchical Clustering...")
     hc = AgglomerativeClustering(n_clusters=n_clusters)
     hc_labels = hc.fit_predict(X)
 
@@ -63,16 +63,16 @@ if __name__ == "__main__":
 
     # --- Analysis Summary ---
     print("\n" + "=" * 40)
-    print("📝 Clustering Analysis Result")
+    print("Clustering Analysis Result")
     print("=" * 40)
     print("Report summary:")
     if ari_kmeans > 0.5:
-        print("✅ K-Means worked well, roughly separating different gestures.")
-        print("   This proves our feature extraction is effective.")
-        print("   The data is naturally separable in space even without labels.")
+        print("K-Means worked well, roughly separating different gestures.")
+        print("This proves our feature extraction is effective.")
+        print("The data is naturally separable in space even without labels.")
     else:
-        print("⚠️ Clustering performance is average. Some gestures look similar.")
-        print("   Without supervision, the AI struggles to distinguish them (e.g., A, M, N).")
+        print("Clustering performance is average. Some gestures look similar.")
+        print("Without supervision, the AI struggles to distinguish them (e.g., A, M, N).")
 
     print("-" * 40)
     print("Part 2d (Unsupervised Learning) task completed!")
