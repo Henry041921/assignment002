@@ -11,10 +11,10 @@ from tkinter import filedialog, messagebox, font
 MODEL_FILE = "gesture_model.pkl"
 
 # Load the trained model from the file.
-print(f"Loading model from {MODEL_FILE}...")
+print(f"Loading model from {MODEL_FILE}")
 try:
     classifier = joblib.load(MODEL_FILE)
-    print("✅ Model loaded successfully!")
+    print("Model loaded successfully !")
 except FileNotFoundError:
     # If model is not found, show error and exit.
     root = tk.Tk()
@@ -41,7 +41,8 @@ def normalize_landmarks(landmarks):
         temp_landmark_list[index][1] = temp_landmark_list[index][1] - base_y
         temp_landmark_list[index][2] = temp_landmark_list[index][2] - base_z
 
-    # Flatten the list to find the max absolute value.
+    # Flatten the list
+    # find the max absolute value
     flattened = [val for sublist in temp_landmark_list for val in sublist]
     max_value = max(list(map(abs, flattened)))
 
@@ -64,29 +65,29 @@ def predict_and_draw(image, hands_module):
 
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
-            # Draw hand connections on the frame.
+            # Draw hand connections
             mp_drawing.draw_landmarks(
                 image,
                 hand_landmarks,
                 mp_hands.HAND_CONNECTIONS
             )
 
-            # Get raw coordinates from landmarks.
+            # Get raw coordinates from landmarks
             raw_landmarks = []
             for lm in hand_landmarks.landmark:
                 raw_landmarks.append([lm.x, lm.y, lm.z])
 
-            # Preprocess data to match training format.
+            # Preprocess data to match training format
             processed_features = normalize_landmarks(raw_landmarks)
 
             input_data = np.array([processed_features])
 
             try:
-                # Predict the gesture using the classifier.
+                # Predict the gesture using the classifier
                 prediction = classifier.predict(input_data)
                 predicted_label = prediction[0]
 
-                # Show confidence score if available.
+                # Show confidence score
                 if hasattr(classifier, "predict_proba"):
                     proba = classifier.predict_proba(input_data)
                     confidence = np.max(proba)
@@ -94,7 +95,7 @@ def predict_and_draw(image, hands_module):
                 else:
                     display_text = f"Gesture: {predicted_label}"
 
-                # Draw a background box for better text visibility.
+                # Draw a background box
                 (text_w, text_h), _ = cv2.getTextSize(display_text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
                 cv2.rectangle(image, (0, 0), (text_w + 20, text_h + 40), (0, 0, 0), -1)
                 cv2.putText(image, display_text, (10, text_h + 10),
@@ -107,9 +108,9 @@ def predict_and_draw(image, hands_module):
 
 
 def run_camera_mode():
-    print("\n🚀 Starting camera...")
+    print("\nStarting camera")
 
-    # Configure MediaPipe for stream input.
+    # Configure MediaPipe for stream input
     hands = mp_hands.Hands(
         static_image_mode=False,
         max_num_hands=1,
@@ -124,18 +125,18 @@ def run_camera_mode():
 
     prev_frame_time = 0
 
-    # Main loop for video processing.
+    # Main loop for video processing
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Flip the frame horizontally for a mirror effect.
+        # Flip the frame horizontally for a mirror effect
         frame = cv2.flip(frame, 1)
 
         frame = predict_and_draw(frame, hands)
 
-        # Calculate and display FPS.
+        # Calculate and display FPS
         new_frame_time = time.time()
         fps = 1 / (new_frame_time - prev_frame_time) if prev_frame_time != 0 else 0
         prev_frame_time = new_frame_time
@@ -158,7 +159,7 @@ def run_camera_mode():
 
 
 def run_image_mode():
-    # Open file dialog to select an image.
+    # Open file to select an image.
     file_path = filedialog.askopenfilename(
         title="Select a gesture image",
         filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.webp")]
@@ -181,7 +182,7 @@ def run_image_mode():
         hands.close()
         return
 
-    print(f"Analyzing: {file_path} ...")
+    print(f"Analyzing: {file_path}")
 
     frame = predict_and_draw(frame, hands)
 
@@ -191,19 +192,19 @@ def run_image_mode():
     window_name = f'Result: {os.path.basename(file_path)}'
     cv2.imshow(window_name, frame)
 
-    # Wait for user input to close the window.
+    # Wait for user input to close the window
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     hands.close()
 
 
 def start_gui_app():
-    # Set up the main GUI window.
+    # Set up the main GUI window
     root = tk.Tk()
     root.title("ASL Gesture Recognition System")
     root.geometry("400x350")
 
-    # Center the window on the screen.
+    # Center the window on the screen
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     x = (screen_width - 400) // 2
@@ -231,7 +232,7 @@ def start_gui_app():
                         command=run_image_mode)
     btn_img.pack(pady=10)
 
-    # Button to exit the application.
+    # Button to exit the application
     btn_exit = tk.Button(root, text="Exit Program",
                          font=btn_font, height=1, width=30,
                          command=root.quit)

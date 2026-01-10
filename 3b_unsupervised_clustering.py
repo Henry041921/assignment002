@@ -22,7 +22,7 @@ def plot_cluster_comparison(y_true, y_cluster, title):
     print(f"Plot saved: clustering_{title.replace(' ', '_')}.png")
 
 if __name__ == "__main__":
-    print("Loading data for Clustering...")
+    print("Loading data for Clustering")
     try:
         df = pd.read_csv(DATA_FILE)
     except FileNotFoundError:
@@ -36,8 +36,8 @@ if __name__ == "__main__":
     n_clusters = 10
     print(f"\nStarting Clustering (Target Clusters = {n_clusters})")
 
-    # --- K-Means Clustering ---
-    print("\nRunning K-Means...")
+    #  K-Means Clustering
+    print("\nRunning K-Means")
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     kmeans_labels = kmeans.fit_predict(X)
 
@@ -49,8 +49,8 @@ if __name__ == "__main__":
     print(f"   K-Means Homogeneity: {homo_kmeans:.4f}")
     plot_cluster_comparison(y_true, kmeans_labels, "K-Means Clustering Analysis")
 
-    # --- Hierarchical Clustering ---
-    print("\nRunning Hierarchical Clustering...")
+    #  Hierarchical Clustering
+    print("\nRunning Hierarchical Clustering")
     hc = AgglomerativeClustering(n_clusters=n_clusters)
     hc_labels = hc.fit_predict(X)
 
@@ -61,18 +61,12 @@ if __name__ == "__main__":
     print(f"   Hierarchical Homogeneity: {homo_hc:.4f}")
     plot_cluster_comparison(y_true, hc_labels, "Hierarchical Clustering Analysis")
 
-    # --- Analysis Summary ---
-    print("\n" + "=" * 40)
+    #  Analysis Summary
+    print()
     print("Clustering Analysis Result")
-    print("=" * 40)
-    print("Report summary:")
+    print()
     if ari_kmeans > 0.5:
         print("K-Means worked well, roughly separating different gestures.")
-        print("This proves our feature extraction is effective.")
-        print("The data is naturally separable in space even without labels.")
+        print("This proves our feature extraction is effective. The data is naturally separable in space even without labels.")
     else:
-        print("Clustering performance is average. Some gestures look similar.")
-        print("Without supervision, the AI struggles to distinguish them (e.g., A, M, N).")
-
-    print("-" * 40)
-    print("Part 2d (Unsupervised Learning) task completed!")
+        print("Clustering performance is average. Without supervision, hard to distinguish them")

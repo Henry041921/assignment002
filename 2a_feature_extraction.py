@@ -9,7 +9,7 @@ import copy
 DATA_DIR = "images"
 OUTPUT_FILE = "landmarks_data.csv"
 
-# --- Init MediaPipe ---
+#  Init MediaPipe
 # Use static mode for images, only detect 1 hand.
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
@@ -19,13 +19,12 @@ hands = mp_hands.Hands(
 )
 
 def normalize_landmarks(landmarks):
-    """
-    Normalize data.
-    Make coordinates relative to wrist and scale size to -1 to 1.
-    """
+
+#    Normalize data.
+#    Make coordinates relative to wrist and scale size to -1 to 1.
     temp_landmark_list = copy.deepcopy(landmarks)
 
-    # --- Step 1: Relative Coordinates ---
+    #  Step 1: Relative Coordinates
     base_x, base_y, base_z = 0, 0, 0
     for index, landmark_point in enumerate(temp_landmark_list):
         if index == 0:
@@ -37,7 +36,7 @@ def normalize_landmarks(landmarks):
         temp_landmark_list[index][1] = temp_landmark_list[index][1] - base_y
         temp_landmark_list[index][2] = temp_landmark_list[index][2] - base_z
 
-    # --- Step 2: Scale Normalization ---
+    #  Step 2: Scale Normalization
     # Find max absolute value to scale everything.
     flattened = [val for sublist in temp_landmark_list for val in sublist]
     max_value = max(list(map(abs, flattened)))
@@ -58,11 +57,13 @@ def process_dataset():
 
     # Check if folder exists.
     if not os.path.exists(DATA_DIR):
+        print()
         print(f"Error: Folder '{DATA_DIR}' not found.")
         return
 
-    # Get class names like A, B, C.
+    # Get class names
     classes = sorted([d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))])
+    print()
     print(f"Classes found: {classes}")
 
     total_images = 0
@@ -118,15 +119,17 @@ def process_dataset():
         df = pd.DataFrame(data, columns=header)
         df.to_csv(OUTPUT_FILE, index=False)
 
-        print("-" * 40)
-        print(f"🎉 Feature extraction and preprocessing completed!")
-        print(f"original image: {total_images} 张")
-        print(f"Valid data after cleaning: {valid_images} 条")
+        print()
+        print(f"Feature extraction and preprocessing completed!")
+        print()
+        print(f"original image: {total_images} ")
+        print(f"Valid data after cleaning: {valid_images} ")
         print(f"Data has been saved to: {OUTPUT_FILE}")
-        print("-" * 40)
+        print()
     else:
         print("No data extracted, please check the image path.")
 
 if __name__ == "__main__":
     process_dataset()
     hands.close()
+print("Next step: Run 3_train_model.py to train the model.")
